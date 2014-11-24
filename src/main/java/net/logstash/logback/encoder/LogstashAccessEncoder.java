@@ -16,6 +16,7 @@ package net.logstash.logback.encoder;
 import static org.apache.commons.io.IOUtils.*;
 
 import java.io.IOException;
+import java.util.*;
 
 import net.logstash.logback.LogstashAccessFormatter;
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -25,7 +26,7 @@ import ch.qos.logback.core.encoder.EncoderBase;
 public class LogstashAccessEncoder extends EncoderBase<IAccessEvent> {
     
     private boolean immediateFlush = true;
-    
+
     /**
      * If true, the caller information is included in the logged data.
      * Note: calculating the caller data is an expensive operation.
@@ -67,6 +68,18 @@ public class LogstashAccessEncoder extends EncoderBase<IAccessEvent> {
     
     public void setImmediateFlush(boolean immediateFlush) {
         this.immediateFlush = immediateFlush;
+    }
+
+    public void setRequestAttributes(String names) {
+        List<String> attributes = new ArrayList<String>();
+        for (String attrName : names.split(",")) {
+            attrName = attrName.trim();
+            if (!attrName.isEmpty()) {
+                attributes.add(attrName);
+            }
+        }
+
+        formatter.setAttributes(attributes);
     }
     
 }

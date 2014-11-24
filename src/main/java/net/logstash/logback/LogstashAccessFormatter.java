@@ -13,20 +13,21 @@
  */
 package net.logstash.logback;
 
-import java.io.IOException;
-
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.core.Context;
 import ch.qos.logback.core.spi.ContextAware;
-
 import com.fasterxml.jackson.core.JsonGenerator;
-
 import net.logstash.logback.fieldnames.LogstashAccessFieldNames;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  *
  */
 public class LogstashAccessFormatter extends LogstashAbstractFormatter<IAccessEvent, LogstashAccessFieldNames> {
+    private List<String> attributes;
+
     public LogstashAccessFormatter(ContextAware contextAware) {
         super(contextAware, new LogstashAccessFieldNames());
     }
@@ -44,6 +45,7 @@ public class LogstashAccessFormatter extends LogstashAbstractFormatter<IAccessEv
                         event.getContentLength()));
         
         writeFields(generator, event, context);
+
         generator.writeEndObject();
         generator.flush();
     }
@@ -60,13 +62,29 @@ public class LogstashAccessFormatter extends LogstashAbstractFormatter<IAccessEv
         writeStringField(generator, fieldNames.getFieldsRemoteUser(), event.getRemoteUser());
         writeNumberField(generator, fieldNames.getFieldsContentLength(), event.getContentLength());
         writeNumberField(generator, fieldNames.getFieldsElapsedTime(), event.getElapsedTime());
-        
+
+        writeAttributes(generator, event);
+
         writeContextPropertiesIfNecessary(generator, context);
     }
-    
+
+    private void writeAttributes(JsonGenerator generator, IAccessEvent event) throws IOException {
+        if (attributes == null || attributes.isEmpty()) {
+            return;
+        }
+
+        for (String name : attributes) {
+            writeStringField(generator, name, event.getAttribute(name));
+        }
+    }
+
     private void writeContextPropertiesIfNecessary(JsonGenerator generator, Context context) throws IOException {
         if (context != null) {
             writeMapEntries(generator, context.getCopyOfPropertyMap());
         }
+    }
+
+    public void setAttributes(List<String> attributes) {
+        this.attributes = attributes;
     }
 }
